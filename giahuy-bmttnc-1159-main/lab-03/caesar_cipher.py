@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow,QMessageBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
 from ui.caesar import Ui_MainWindow
 import requests
 
@@ -13,48 +13,58 @@ class MyApp(QMainWindow):
 
     def call_api_encrypt(self):
         url = "http://127.0.0.1:5000/api/caesar/encrypt"
-        payload = {
-            "plain_text": self.ui.txt_plaintext.toPlainText(),
-            "key": self.ui.txt_key.toPlainText()
-        }
         try:
+            # Chuyển đổi key thành số nguyên
+            key = int(self.ui.txt_key.toPlainText())
+            payload = {
+                "plain_text": self.ui.txt_plain_text.toPlainText(),
+                "key": key
+            }
             response = requests.post(url, json=payload)
             if response.status_code == 200:
                 data = response.json()
-                self.ui.txt_ciphertext.setPlainText(data['encrypted message'])
+                self.ui.txt_cipher_text.setText(data["encrypted_message"])
 
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Information)
-                msg.setText("Encrypt successfully")
+                msg.setText("Encrypted Successfully")
                 msg.exec_()
             else:
-                print("Error")
+                # Hiển thị lỗi chi tiết từ API
+                QMessageBox.critical(self, "Error", f"API Error: {response.status_code} - {response.text}")
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Key must be an integer!")
         except requests.exceptions.RequestException as e:
-            print("errol: %s"% e.encrypted_message)
+            QMessageBox.critical(self, "Error", f"Request Error: {str(e)}")
 
     def call_api_decrypt(self):
         url = "http://127.0.0.1:5000/api/caesar/decrypt"
-        payload = {
-            "cipher_text": self.ui.txt_ciphertext.toPlainText(),
-            "key": self.ui.txt_key.toPlainText()
-        }
         try:
+            # Chuyển đổi key thành số nguyên
+            key = int(self.ui.txt_key.toPlainText())
+            payload = {
+                "cipher_text": self.ui.txt_cipher_text.toPlainText(),
+                "key": key
+            }
             response = requests.post(url, json=payload)
             if response.status_code == 200:
                 data = response.json()
-                self.ui.txt_plaintext.setPlainText(data['decrypted message'])
+                self.ui.txt_plain_text.setText(data["decrypted_message"])
 
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Information)
-                msg.setText("decrypt successfully")
+                msg.setText("Decrypted Successfully")
                 msg.exec_()
             else:
-                print("Error")
+                # Hiển thị lỗi chi tiết từ API
+                QMessageBox.critical(self, "Error", f"API Error: {response.status_code} - {response.text}")
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Key must be an integer!")
         except requests.exceptions.RequestException as e:
-            print("errol: %s"% e.decrypted_message)
+            QMessageBox.critical(self, "Error", f"Request Error: {str(e)}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MyApp()
     window.show()
-    sys.exit(app.exec_())  
+    sys.exit(app.exec_())
